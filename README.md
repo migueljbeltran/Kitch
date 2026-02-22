@@ -1,162 +1,157 @@
-# 🍽️ Kitch
+# Kitch
 
-**Java-based inventory and recipe management for your kitchen.**
+**Full-stack kitchen inventory, shopping list, and recipe management app.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A desktop application for managing kitchen inventory, shopping lists, and recipes with a clean Swing GUI.
+A Spring Boot REST API + React frontend for managing your kitchen. Track inventory, build shopping lists, and store recipes with ingredients and step-by-step instructions. Data is persisted in an H2 database and seeded from CSV files on first startup.
 
 ## Features
 
-- 📦 **Inventory Management** — Track products, brands, quantities, and expiry dates
-- 🛒 **Shopping Lists** — Auto-move out-of-stock items to shopping
-- 🍳 **Recipe Builder** — Create recipes with ingredients and step-by-step instructions
-- 🔍 **Search & Filter** — Quick search across all tables
-- 💾 **Auto-Save** — Changes persist automatically to CSV files
-- 🎨 **Modern UI** — Custom dark theme with Oxford/Cambridge color palette
+- **Inventory Dashboard** — Track products, brands, quantities, and expiry dates with stat cards and a visual grid
+- **Shopping Lists** — Checklist-style UI grouped by category with a progress bar; auto-move out-of-stock items from inventory
+- **Recipes** — Create and browse recipes with a cookbook-style detail view, ingredient lists, and numbered step-by-step instructions
+- **Full CRUD** — Add, edit, and delete everything from the frontend
+- **RESTful API** — Clean endpoint design for all resources
+- **H2 Database** — File-based persistence with JPA
+- **CSV Data Seeding** — Sample data loaded on first startup
 
 ## Tech Stack
 
+### Backend
+
 [![Java](https://img.shields.io/badge/Java_17+-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![Swing](https://img.shields.io/badge/Swing-GUI-blue?style=flat-square)](https://docs.oracle.com/javase/tutorial/uiswing/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot_3.2-6DB33F?style=flat-square&logo=spring&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Maven](https://img.shields.io/badge/Maven-C71A36?style=flat-square&logo=apachemaven&logoColor=white)](https://maven.apache.org/)
+[![H2](https://img.shields.io/badge/H2_Database-0000BB?style=flat-square)](https://h2database.com/)
+
+### Frontend
+
+[![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite_7-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![React Router](https://img.shields.io/badge/React_Router_7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)](https://reactrouter.com/)
 
 ## Quick Start
 
 ### Prerequisites
 
+- Java JDK 17 or higher
+- Node.js 18 or higher
+
+### Backend
+
 ```bash
-Java JDK 17 or higher
+git clone https://github.com/migueljbeltran/Kitch.git
+cd Kitchen-Project
+
+# Run the API
+./mvnw spring-boot:run
 ```
 
-### Installation & Run
+The API starts on `http://localhost:8080`.
+
+### Frontend
 
 ```bash
-git clone https://github.com/yourusername/kitch
-cd kitch
-
-# Compile
-javac -d bin src/kitchgui/**/*.java
-
-# Run
-java -cp bin kitchgui.Main
+cd frontend
+npm install
+npm run dev
 ```
 
-Or use your IDE to run `kitchgui.Main`.
+The frontend starts on `http://localhost:5173` and proxies API calls to the backend.
 
 ## Project Structure
 
 ```
-kitch/
-├── data/                      # CSV data files
-│   ├── inventory.csv         # Current inventory
-│   ├── shopping.csv          # Shopping list
-│   ├── ingredients/          # Recipe ingredients
-│   │   ├── ingredients1.csv
-│   │   └── ingredients2.csv
-│   └── recipes/              # Recipe instructions
-│       ├── recipe1.txt
-│       └── recipe2.txt
-├── src/
-│   └── kitchgui/
-│       ├── Main.java         # Entry point & color palette
-│       ├── controller/       # Business logic
-│       │   ├── InventoryService.java
-│       │   └── RecipeService.java
-│       ├── model/            # Data models
-│       │   ├── Item.java
-│       │   ├── Recipe.java
-│       │   └── ItemTableModel.java
-│       └── ui/               # Swing components
-│           ├── GUIDesign.java      # Main inventory UI
-│           └── RecipeListUI.java   # Recipe builder UI
+Kitchen-Project/
+├── pom.xml                              # Maven build config
+├── src/main/java/com/kitch/
+│   ├── KitchApplication.java            # Spring Boot entry point
+│   ├── config/
+│   │   └── DataInitializer.java         # CSV data seeder
+│   ├── entity/                          # JPA entities (Item, Recipe, RecipeStep)
+│   ├── repository/                      # Spring Data JPA repositories
+│   ├── service/                         # Business logic
+│   ├── controller/                      # REST controllers
+│   └── dto/                             # Request/response DTOs
+├── src/main/resources/
+│   ├── application.properties
+│   └── data/                            # CSV/TXT seed data
+└── frontend/
+    ├── package.json
+    ├── vite.config.js                   # Vite + Tailwind + API proxy
+    └── src/
+        ├── main.jsx                     # Router setup
+        ├── App.jsx                      # Layout shell + Navbar
+        ├── api/                         # Fetch wrappers (inventory, shopping, recipes)
+        ├── components/                  # Reusable UI components
+        └── pages/                       # Route-level page components
 ```
 
-## Data Format
+## API Endpoints
 
-### Inventory/Shopping CSV
+### Inventory (`/api/inventory`)
 
-```csv
-Product,Brand,Category,Quantity,Expiry
-Milk,Trader Joe's,Dairy,2,2025-12-10
-Chicken Thighs,Trader Joe's,Meat,1,2025-11-20
-Onions,Yellow,Produce,5,2026-01-15
-```
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/inventory` | List all inventory items |
+| GET | `/api/inventory/{id}` | Get single item |
+| POST | `/api/inventory` | Add item |
+| PUT | `/api/inventory/{id}` | Update item |
+| DELETE | `/api/inventory/{id}` | Delete item |
+| POST | `/api/inventory/move-to-shopping` | Move qty<=0 to shopping |
 
-### Recipe Files
+### Shopping (`/api/shopping`)
 
-**ingredients1.csv**
-```csv
-Product,Brand,Category,Quantity,Expiry
-Chicken Thighs,Any,Meat,1,
-Soy Sauce,Any,Pantry,1,
-Brown Sugar,Any,Pantry,1,
-```
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/shopping` | List all shopping items |
+| GET | `/api/shopping/{id}` | Get single item |
+| POST | `/api/shopping` | Add item |
+| PUT | `/api/shopping/{id}` | Update item |
+| DELETE | `/api/shopping/{id}` | Delete item |
 
-**recipe1.txt**
-```
-Cut chicken into bite-size pieces and pat dry.
-Whisk soy sauce and brown sugar; simmer to thicken.
-Sear chicken, pour sauce, reduce until glossy and sticky.
-```
+### Recipes (`/api/recipes`)
 
-## Keyboard Shortcuts
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/recipes` | List all recipes |
+| GET | `/api/recipes/{id}` | Get recipe with ingredients + steps |
+| POST | `/api/recipes` | Create recipe |
+| PUT | `/api/recipes/{id}` | Update recipe name |
+| DELETE | `/api/recipes/{id}` | Delete recipe + all children |
+| POST | `/api/recipes/{id}/ingredients` | Add ingredient |
+| PUT | `/api/recipes/{id}/ingredients/{iid}` | Update ingredient |
+| DELETE | `/api/recipes/{id}/ingredients/{iid}` | Delete ingredient |
+| POST | `/api/recipes/{id}/steps` | Add step |
+| PUT | `/api/recipes/{id}/steps/{sid}` | Update step |
+| DELETE | `/api/recipes/{id}/steps/{sid}` | Delete step |
 
-### Main Window
-- `Ctrl/Cmd + R` — Open Recipe Builder
+## Configuration
 
-### Recipe Builder
-- `Ctrl/Cmd + 1` — Switch to Recipe 1
-- `Ctrl/Cmd + 2` — Switch to Recipe 2
+Key properties in `application.properties`:
 
-## Design
+| Property | Default | Description |
+|----------|---------|-------------|
+| `server.port` | 8080 | Server port |
+| `kitch.seed-data` | true | Seed CSV data on first startup |
+| `spring.datasource.url` | `jdbc:h2:file:./kitch-db` | Database file location |
 
-### Color Palette
+## Roadmap
 
-- **Oxford Blue** (#011936) — App background
-- **Charcoal** (#465362) — Card backgrounds
-- **Cambridge Blue** (#82A3A1) — Headers
-- **Olivine** (#9FC490) — Primary accent
-- **Tea Green** (#C0DFA1) — Secondary accent
-
-### Architecture
-
-- **MVC Pattern** — Models, views (UI), and controllers (services) are separated
-- **Observer Pattern** — Tables auto-update when models change
-- **File-based Storage** — Simple CSV persistence without external database
-
-## Features in Detail
-
-### Inventory Management
-- Add, update, and delete items
-- Track product name, brand, category, quantity, and expiry date
-- Filter items with live search
-- Move zero-quantity items to shopping list with one click
-
-### Recipe Builder
-- Manage up to 2 recipes (easily extensible)
-- Each recipe has ingredients list and step-by-step instructions
-- Ingredients use same Item model as inventory
-- Auto-save on every change
-
-### Auto-Save
-All changes persist immediately to CSV files:
-- No "Save" button needed
-- Toast notification confirms saves
-- Data survives app restarts
+See [docs/roadmap.md](docs/roadmap.md) for planned features including testing, search/filtering, authentication, and deployment.
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 👤 Author
+## Author
 
-**Miguel Joaquin Beltran**  
-🎓 Computer Science @ UC Davis  
-🔗 [LinkedIn](https://www.linkedin.com/in/miguel-j-beltran/)  
-📧 [Email](mailto:migueljoaquinbeltran@gmail.com)
-
----
+**Miguel Joaquin Beltran**
+Computer Science @ UC Davis
+[LinkedIn](https://www.linkedin.com/in/miguel-j-beltran/) | [Email](mailto:migueljoaquinbeltran@gmail.com)
