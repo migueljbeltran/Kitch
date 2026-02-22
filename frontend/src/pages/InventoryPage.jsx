@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getItems, createItem, updateItem, deleteItem, moveToShopping } from '../api/inventory';
 import ItemForm from '../components/ItemForm';
+import Button from '../components/Button';
 
 export default function InventoryPage() {
   const [items, setItems] = useState([]);
@@ -8,8 +9,9 @@ export default function InventoryPage() {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  async function fetchItems() {
+  const fetchItems = useCallback(async () => {
     try {
       setError(null);
       const data = await getItems();
@@ -19,12 +21,13 @@ export default function InventoryPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  useEffect(() => { fetchItems(); }, []);
+  useEffect(() => { fetchItems(); }, [fetchItems]);
 
   async function handleSave(data) {
     try {
+      setSubmitting(true);
       if (editing) {
         await updateItem(editing.id, data);
       } else {
@@ -35,10 +38,13 @@ export default function InventoryPage() {
       fetchItems();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSubmitting(false);
     }
   }
 
   async function handleDelete(id) {
+    if (!window.confirm('Remove this item from inventory?')) return;
     try {
       await deleteItem(id);
       fetchItems();
@@ -85,20 +91,20 @@ export default function InventoryPage() {
           <p className="text-charcoal-light text-sm mt-1">Everything in your kitchen at a glance</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleMoveToShopping} className="text-sm text-charcoal-light hover:text-terracotta border border-warm-border px-4 py-2.5 rounded-lg transition-colors duration-200 hover:border-terracotta-light">
+          <Button variant="outline" onClick={handleMoveToShopping}>
             Move to Shopping
-          </button>
-          <button onClick={() => { setEditing(null); setShowForm(true); }} className="bg-terracotta text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-terracotta-dark transition-colors duration-200 shadow-sm">
+          </Button>
+          <Button onClick={() => { setEditing(null); setShowForm(true); }}>
             + Add Item
-          </button>
+          </Button>
         </div>
       </div>
 
       {error && <p className="text-terracotta text-sm mb-4 animate-fade-in">{error}</p>}
-      {showForm && <ItemForm item={editing} onSave={handleSave} onCancel={handleCancel} />}
+      {showForm && <ItemForm item={editing} onSave={handleSave} onCancel={handleCancel} submitting={submitting} />}
 
       {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <div className="bg-warm-surface border border-warm-border rounded-xl p-5">
           <p className="text-xs font-medium tracking-widest uppercase text-charcoal-light mb-1">Total Items</p>
           <p className="font-display text-3xl font-semibold text-charcoal">{items.length}</p>

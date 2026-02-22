@@ -1,6 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getItems, createItem, updateItem, deleteItem } from '../api/shopping';
 import ItemForm from '../components/ItemForm';
+import Button from '../components/Button';
+
+const STORAGE_KEY = 'kitch-shopping-checked';
+
+function loadChecked() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
 
 export default function ShoppingPage() {
   const [items, setItems] = useState([]);
@@ -8,9 +19,10 @@ export default function ShoppingPage() {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [checked, setChecked] = useState({});
+  const [checked, setChecked] = useState(loadChecked);
+  const [submitting, setSubmitting] = useState(false);
 
-  async function fetchItems() {
+  const fetchItems = useCallback(async () => {
     try {
       setError(null);
       const data = await getItems();
@@ -20,12 +32,17 @@ export default function ShoppingPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  useEffect(() => { fetchItems(); }, []);
+  useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
+  }, [checked]);
 
   async function handleSave(data) {
     try {
+      setSubmitting(true);
       if (editing) {
         await updateItem(editing.id, data);
       } else {
@@ -36,10 +53,13 @@ export default function ShoppingPage() {
       fetchItems();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSubmitting(false);
     }
   }
 
   async function handleDelete(id) {
+    if (!window.confirm('Remove this item from your shopping list?')) return;
     try {
       await deleteItem(id);
       setChecked(prev => { const next = { ...prev }; delete next[id]; return next; });
@@ -87,13 +107,13 @@ export default function ShoppingPage() {
               : `${items.length} ${items.length === 1 ? 'item' : 'items'} to buy`}
           </p>
         </div>
-        <button onClick={() => { setEditing(null); setShowForm(true); }} className="bg-terracotta text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-terracotta-dark transition-colors duration-200 shadow-sm">
+        <Button onClick={() => { setEditing(null); setShowForm(true); }}>
           + Add Item
-        </button>
+        </Button>
       </div>
 
       {error && <p className="text-terracotta text-sm mb-4 animate-fade-in">{error}</p>}
-      {showForm && <ItemForm item={editing} onSave={handleSave} onCancel={handleCancel} />}
+      {showForm && <ItemForm item={editing} onSave={handleSave} onCancel={handleCancel} submitting={submitting} />}
 
       {/* Progress bar */}
       {items.length > 0 && (

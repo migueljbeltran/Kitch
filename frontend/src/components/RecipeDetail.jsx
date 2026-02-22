@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { updateRecipeName, addIngredient, updateIngredient, deleteIngredient, addStep, updateStep, deleteStep } from '../api/recipes';
 import ItemForm from './ItemForm';
+import Button from './Button';
 
 export default function RecipeDetail({ recipe, onRefresh }) {
   const [error, setError] = useState(null);
@@ -11,13 +12,20 @@ export default function RecipeDetail({ recipe, onRefresh }) {
   const [showStepForm, setShowStepForm] = useState(false);
   const [editingStep, setEditingStep] = useState(null);
   const [stepText, setStepText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setName(recipe.name);
+  }, [recipe.name]);
 
   async function handleNameSave() {
     try {
+      setSubmitting(true);
       await updateRecipeName(recipe.id, name);
       setEditingName(false);
       onRefresh();
     } catch (err) { setError(err.message); }
+    finally { setSubmitting(false); }
   }
 
   async function handleIngredientSave(data) {
@@ -34,6 +42,7 @@ export default function RecipeDetail({ recipe, onRefresh }) {
   }
 
   async function handleIngredientDelete(id) {
+    if (!window.confirm('Remove this ingredient?')) return;
     try {
       await deleteIngredient(recipe.id, id);
       onRefresh();
@@ -43,6 +52,7 @@ export default function RecipeDetail({ recipe, onRefresh }) {
   async function handleStepSave(e) {
     e.preventDefault();
     try {
+      setSubmitting(true);
       if (editingStep) {
         await updateStep(recipe.id, editingStep.id, stepText);
       } else {
@@ -53,9 +63,11 @@ export default function RecipeDetail({ recipe, onRefresh }) {
       setStepText('');
       onRefresh();
     } catch (err) { setError(err.message); }
+    finally { setSubmitting(false); }
   }
 
   async function handleStepDelete(stepId) {
+    if (!window.confirm('Remove this step?')) return;
     try {
       await deleteStep(recipe.id, stepId);
       onRefresh();
@@ -76,8 +88,12 @@ export default function RecipeDetail({ recipe, onRefresh }) {
             <div className="flex items-center gap-3 animate-fade-in">
               <input value={name} onChange={e => setName(e.target.value)}
                 className="font-display text-4xl font-semibold text-charcoal bg-transparent border-b-2 border-terracotta px-1 py-1 focus:outline-none w-full max-w-lg" />
-              <button onClick={handleNameSave} className="text-sm bg-terracotta text-white px-4 py-2 rounded-lg hover:bg-terracotta-dark transition-colors duration-200">Save</button>
-              <button onClick={() => { setEditingName(false); setName(recipe.name); }} className="text-sm text-charcoal-light hover:text-charcoal transition-colors duration-200">Cancel</button>
+              <Button onClick={handleNameSave} disabled={submitting}>
+                {submitting ? 'Saving...' : 'Save'}
+              </Button>
+              <Button variant="secondary" onClick={() => { setEditingName(false); setName(recipe.name); }}>
+                Cancel
+              </Button>
             </div>
           ) : (
             <h1 className="font-display text-4xl font-semibold text-charcoal tracking-tight cursor-pointer hover:text-terracotta transition-colors duration-200 group"
@@ -161,20 +177,19 @@ export default function RecipeDetail({ recipe, onRefresh }) {
           {showStepForm && (
             <form onSubmit={handleStepSave} className="bg-warm-surface border border-warm-border rounded-xl p-6 mb-5 flex gap-6 items-end animate-fade-in-up">
               <div className="flex-1">
-                <label className="block text-xs font-medium tracking-wide uppercase text-charcoal-light mb-2">
+                <label htmlFor="step-instruction" className="block text-xs font-medium tracking-wide uppercase text-charcoal-light mb-2">
                   Instruction <span className="text-terracotta">*</span>
                 </label>
-                <input value={stepText} onChange={e => setStepText(e.target.value)} required maxLength={1000}
+                <input id="step-instruction" value={stepText} onChange={e => setStepText(e.target.value)} required maxLength={1000}
                   placeholder="e.g. Preheat the oven to 375°F"
                   className="w-full border-b-2 border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal placeholder:text-charcoal-light/40 focus:outline-none focus:border-terracotta transition-colors duration-200" />
               </div>
-              <button type="submit" className="bg-terracotta text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-terracotta-dark transition-colors duration-200 shadow-sm">
-                {editingStep ? 'Update' : 'Add'}
-              </button>
-              <button type="button" onClick={() => { setShowStepForm(false); setEditingStep(null); }}
-                className="text-charcoal-light hover:text-charcoal px-4 py-2.5 text-sm transition-colors duration-200">
+              <Button type="submit" disabled={submitting}>
+                {submitting ? 'Saving...' : (editingStep ? 'Update' : 'Add')}
+              </Button>
+              <Button variant="secondary" type="button" onClick={() => { setShowStepForm(false); setEditingStep(null); }}>
                 Cancel
-              </button>
+              </Button>
             </form>
           )}
 

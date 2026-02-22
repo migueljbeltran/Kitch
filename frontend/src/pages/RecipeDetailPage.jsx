@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getRecipe } from '../api/recipes';
 import RecipeDetail from '../components/RecipeDetail';
@@ -9,7 +9,7 @@ export default function RecipeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  async function fetchRecipe() {
+  const fetchRecipe = useCallback(async () => {
     try {
       setError(null);
       const data = await getRecipe(id);
@@ -19,9 +19,9 @@ export default function RecipeDetailPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
 
-  useEffect(() => { fetchRecipe(); }, [id]);
+  useEffect(() => { fetchRecipe(); }, [fetchRecipe]);
 
   if (loading) return <p className="text-charcoal-light font-display italic animate-fade-in">Loading recipe...</p>;
   if (error) return <p className="text-terracotta animate-fade-in">{error}</p>;

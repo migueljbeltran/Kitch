@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import Button from './Button';
 
-export default function ItemForm({ item, onSave, onCancel }) {
+export default function ItemForm({ item, onSave, onCancel, submitting }) {
   const [form, setForm] = useState({
     product: '',
     brand: '',
@@ -38,37 +39,37 @@ export default function ItemForm({ item, onSave, onCancel }) {
     <form onSubmit={handleSubmit} className="bg-warm-surface border border-warm-border rounded-xl p-6 mb-6 animate-fade-in-up">
       <div className="grid grid-cols-2 gap-x-8 gap-y-5">
         <div>
-          <label className={labelClass}>Product <span className="text-terracotta">*</span></label>
-          <input name="product" value={form.product} onChange={handleChange} required maxLength={255}
+          <label htmlFor="item-product" className={labelClass}>Product <span className="text-terracotta">*</span></label>
+          <input id="item-product" name="product" value={form.product} onChange={handleChange} required maxLength={255}
             placeholder="e.g. Olive Oil" className={inputClass} />
         </div>
         <div>
-          <label className={labelClass}>Brand</label>
-          <input name="brand" value={form.brand} onChange={handleChange} maxLength={255}
+          <label htmlFor="item-brand" className={labelClass}>Brand</label>
+          <input id="item-brand" name="brand" value={form.brand} onChange={handleChange} maxLength={255}
             placeholder="e.g. Bertolli" className={inputClass} />
         </div>
         <div>
-          <label className={labelClass}>Category</label>
-          <input name="category" value={form.category} onChange={handleChange} maxLength={255}
+          <label htmlFor="item-category" className={labelClass}>Category</label>
+          <input id="item-category" name="category" value={form.category} onChange={handleChange} maxLength={255}
             placeholder="e.g. Pantry" className={inputClass} />
         </div>
         <div>
-          <label className={labelClass}>Quantity</label>
-          <input name="quantity" type="number" value={form.quantity} onChange={handleChange} min={0}
+          <label htmlFor="item-quantity" className={labelClass}>Quantity</label>
+          <input id="item-quantity" name="quantity" type="number" value={form.quantity} onChange={handleChange} min={0}
             className={inputClass} />
         </div>
         <div>
-          <label className={labelClass}>Expiry</label>
-          <input name="expiry" type="date" value={form.expiry} onChange={handleChange}
+          <label htmlFor="item-expiry" className={labelClass}>Expiry</label>
+          <input id="item-expiry" name="expiry" type="date" value={form.expiry} onChange={handleChange}
             className={inputClass} />
         </div>
         <div className="flex items-end gap-3">
-          <button type="submit" className="bg-terracotta text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-terracotta-dark transition-colors duration-200 shadow-sm">
-            {item ? 'Update' : 'Add Item'}
-          </button>
-          <button type="button" onClick={onCancel} className="text-charcoal-light hover:text-charcoal px-4 py-2.5 text-sm transition-colors duration-200">
+          <Button type="submit" disabled={submitting}>
+            {submitting ? 'Saving...' : (item ? 'Update' : 'Add Item')}
+          </Button>
+          <Button variant="secondary" type="button" onClick={onCancel}>
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
     </form>
