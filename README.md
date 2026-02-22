@@ -138,10 +138,6 @@ Key properties in `application.properties`:
 | `kitch.seed-data` | true | Seed CSV data on first startup |
 | `spring.datasource.url` | `jdbc:h2:file:./kitch-db` | Database file location |
 
-## Roadmap
-
-See [docs/roadmap.md](docs/roadmap.md) for planned features including testing, search/filtering, authentication, and deployment.
-
 ---
 
 ## License
